@@ -1,3 +1,10 @@
+this project is fork from redis
+this project will be
+1. add a second password
+2. Separate reading and writing, you can give the readonly password to another people who can't modify your database.
+
+
+//////////////////////////////////////////////////////
 This README is just a fast *quick start* document. You can find more detailed documentation at [redis.io](https://redis.io).
 
 What is Redis?
