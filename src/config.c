@@ -532,7 +532,13 @@ void loadServerConfigFromString(char *config) {
                 goto loaderr;
             }
             server.requirepass = argv[1][0] ? zstrdup(argv[1]) : NULL;
-        } else if (!strcasecmp(argv[0],"pidfile") && argc == 2) {
+		} else if (!strcasecmp(argv[0], "requirereadpass") && argc == 2) {
+			if (strlen(argv[1]) > CONFIG_AUTHPASS_MAX_LEN) {
+				err = "Password is longer than CONFIG_AUTHPASS_MAX_LEN";
+				goto loaderr;
+			}
+			server.requirereadpass = argv[1][0] ? zstrdup(argv[1]) : NULL;
+		} else if (!strcasecmp(argv[0],"pidfile") && argc == 2) {
             zfree(server.pidfile);
             server.pidfile = zstrdup(argv[1]);
         } else if (!strcasecmp(argv[0],"dbfilename") && argc == 2) {
@@ -921,6 +927,10 @@ void configSetCommand(client *c) {
         if (sdslen(o->ptr) > CONFIG_AUTHPASS_MAX_LEN) goto badfmt;
         zfree(server.requirepass);
         server.requirepass = ((char*)o->ptr)[0] ? zstrdup(o->ptr) : NULL;
+    } config_set_special_field("requirereadpass") {
+        if (sdslen(o->ptr) > CONFIG_AUTHPASS_MAX_LEN) goto badfmt;
+        zfree(server.requirereadpass);
+        server.requirereadpass = ((char*)o->ptr)[0] ? zstrdup(o->ptr) : NULL;
     } config_set_special_field("masterauth") {
         zfree(server.masterauth);
         server.masterauth = ((char*)o->ptr)[0] ? zstrdup(o->ptr) : NULL;
@@ -1333,6 +1343,7 @@ void configGetCommand(client *c) {
     /* String values */
     config_get_string_field("dbfilename",server.rdb_filename);
     config_get_string_field("requirepass",server.requirepass);
+    config_get_string_field("requirereadpass",server.requirereadpass);
     config_get_string_field("masterauth",server.masterauth);
     config_get_string_field("cluster-announce-ip",server.cluster_announce_ip);
     config_get_string_field("unixsocket",server.unixsocket);
@@ -2161,6 +2172,7 @@ int rewriteConfig(char *path) {
     rewriteConfigNumericalOption(state,"min-replicas-to-write",server.repl_min_slaves_to_write,CONFIG_DEFAULT_MIN_SLAVES_TO_WRITE);
     rewriteConfigNumericalOption(state,"min-replicas-max-lag",server.repl_min_slaves_max_lag,CONFIG_DEFAULT_MIN_SLAVES_MAX_LAG);
     rewriteConfigStringOption(state,"requirepass",server.requirepass,NULL);
+    rewriteConfigStringOption(state,"requirereadpass",server.requirereadpass,NULL);
     rewriteConfigNumericalOption(state,"maxclients",server.maxclients,CONFIG_DEFAULT_MAX_CLIENTS);
     rewriteConfigBytesOption(state,"maxmemory",server.maxmemory,CONFIG_DEFAULT_MAXMEMORY);
     rewriteConfigBytesOption(state,"proto-max-bulk-len",server.proto_max_bulk_len,CONFIG_DEFAULT_PROTO_MAX_BULK_LEN);
